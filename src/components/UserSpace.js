@@ -10,7 +10,7 @@ function UserSpace({ user, setRecieverUser, recieverUser}) {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const { data, error } = await supabase.from("users").select("*").eq('Section',user.Section).neq('university_roll_no',user.university_roll_no);
+        const { data, error } = await supabase.from("users").select("*").eq('Section',user.Section).eq('year',user.year).neq('university_roll_no',user.university_roll_no);
         if (error) throw error;
         console.log(data);
         setUsers(data);

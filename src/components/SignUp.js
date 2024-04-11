@@ -7,6 +7,7 @@ function SignUp() {
   const [university_roll_no, setUniversity_roll_no] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  let response;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -14,23 +15,45 @@ function SignUp() {
     setPassword("");
     setEmail("");
     try {
-      const response = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            university_roll_no: university_roll_no,
-          },
-        },
-      });
-
-      if (response.error) throw response.error;
-
-      if (response.data) {
-        navigate("/");
+      const condition = await supabase.from('users').select('*').eq('university_roll_no',university_roll_no).single();
+      const allowedDomain = 'gla.ac.in';
+      const domain = email.split('@')[1];
+      if (domain !== allowedDomain) {
+        throw Error('Sign-up is restricted to GLA University emails only.')
       }
+      
+      if(condition.data === null)
+      {
+        throw Error('check roll number or roll number not found in database contact administrator')
+      }
+      if(condition.data.status === "Y")
+      {
+        throw Error('Id is already created for this user')
+      }
+      else
+      {
+        response = await supabase.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: {
+              university_roll_no: university_roll_no,
+            },
+          },
+        });
+        if (response.error) throw response.error;
+
+        if (response.data) {
+          console.log('User account created');
+          alert('Account Created Successfully! Please Login with your credentials');
+          await supabase.from('users').update({ status: 'Y' }).eq('university_roll_no',university_roll_no)
+          navigate("/");
+        }
+      } 
+
     } catch (error) {
       alert(error.message ?? error);
+      console.log(error.message ?? error);
     }
   }
 
